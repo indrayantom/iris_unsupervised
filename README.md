@@ -18,13 +18,10 @@ This work was mainly done using tidyverse environment and glmnet to build the ML
 - [patchwork](https://cran.r-project.org/web/packages/patchwork/index.html)
 
 ## Result preview
-This data has 506 rows, and that number of samples is actually considered small, making Regularization is a good fit. In this work, it is found that Ridge regression performs better than Lasso and ordinary Linear Regression, with hyperparameter lambda is set to be 0.01 . Consecutively, the RMSE on the validation and test dataset are 4.346 and 6.82, with MAPE for the test dataset equals 17% approximately.
-![preview](https://user-images.githubusercontent.com/92590596/156525572-1a979e4e-345f-458a-acd5-becafa5fd656.jpg)
-Those metrics show that the model's performance is quite decent even though no feature engineering was done. That step however, is included in the future works section along with better outliers treatment, proposed to improve the accuracy of the model's prediction. By Residual plot figure, it is evident that except for extreme maximum predicted values (upper outlier), the residual plot already fits some of classic linear regression assumptions, such as linearity, homoskesdascity, and no autocorrelation. Furthermore, with VIF calculation and Q-Q plot of Standardized Residual, it is also found that the result also fits No multicollinearity and normality assumption.
+To determine the best number of clusters, the Total Within Sum of Square of each amount cluster iteration must be calculated, and the result is shown as follow:
+![numclusters](https://user-images.githubusercontent.com/92590596/156587456-817640ac-2de1-40fe-9373-d4d85ad35f10.jpg)
+The best number of cluster is usually found using elbow method, a method to find a point where  sum squares start decreasing slowly in a linear fashion (many literatures/sources say this, e.g https://www.geeksforgeeks.org/elbow-method-for-optimal-value-of-k-in-kmeans/). Based on this characteristic, it is concluded that the optimal number of clusters for this dataset is 3.
 
-## References
-Regularization is a method in which a penalty called lambda is added in the Loss Function in order to introduce a bias thus overfitting will not happen. The method also can be divided into 2 methods, Ridge (quadratic lambda) and Lasso (absolute lambda). Meanwhile Lasso method is able to reduce the coefficients of certain variables to be completely zero, the Ridge regression can't. To grasp more comprehensive explanation about this topic, I would recommend some great youtube videos made by StatQuest. Here is the link:
-
-- https://www.youtube.com/watch?v=Q81RR3yKn30&t=458s
-- https://www.youtube.com/watch?v=NGf0voTMlcs
+From the Petal.Length vs Petal.Width plot, one can see that the model is able to perfectly identify the setosa species among all observations. Unfortunately, when attempting to identify the versicolor and virginica species, the model begins to make 'mistakes'. This errors may comes from the fact that there are several Virginica and versicolor samples with quite similar characteristics to each other.
+![cluster3](https://user-images.githubusercontent.com/92590596/156587499-c6612980-160f-429d-b50f-c24d818ff77c.jpg)
 
