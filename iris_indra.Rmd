@@ -1,0 +1,122 @@
+---
+title: 'Unsupervised ML : PCA and Kmeans in R'
+author: "Indra Yanto"
+date: "12/24/2021"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 0. Import all libraries needed
+```{r,warning=FALSE,message=FALSE}
+library(tidyverse)
+library(factoextra)
+```
+
+## 1. Do PCA analysis on Iris dataset and determine the corresponding eigen value
+
+First, to make the data look like unlabeled data, remove the Species feature.
+```{r}
+df_ori=iris
+df_ori=df_ori %>% select(-Species)
+df_ori=df_ori[complete.cases(df_ori),] #remove rows with any missing values
+df_ori
+```
+
+Before generating the PCA model, the data must be standardized first.
+```{r}
+pca_analysis=prcomp(df_ori,center = TRUE,scale=TRUE)
+summary(pca_analysis)
+```
+The eigen values :
+```{r}
+pca_analysis$sdev^2
+```
+Based on the results, one can see that the eigen values for the first and second principal components are 2.92 and 0.91.
+
+## 2. How much information can still be 'provided' by the reduced dataset?
+
+```{r}
+summary(pca_analysis)
+```
+
+According to the PCA model summary, the cumulative variance proportion of PC1 and PC2 is 0.96. In other words, keeping PC1 and PC2 alone can explain approximately 96% of the variance/spreadness within the dataset. This means that our PCA model is effective because it can reduce the dimension of the dataset without losing much information (only 4%).
+
+## 3. Find the optimal value of k based on Elbow and Silhouette method. Compare the result to the fact that we have 3 categories within the dataset, i.e : setosa, versicolor and virginica.
+
+Scale the data
+```{r}
+df_scaled=scale(df_ori)
+```
+
+**WSS (Elbow) method**
+```{r}
+p1=fviz_nbclust(df_scaled,kmeans,method='wss')
+ggsave('numclusters.jpg',p1,dpi=1000,width=9,height=6)
+print(p1)
+```
+
+**Silhouette method**
+```{r}
+fviz_nbclust(df_scaled,kmeans,method='silhouette')
+```
+
+It is evident from above figures that both methods show different results. The silhouette method clearly identifies k=2 as the optimum number of clusters, where the silhouette width is at its maximum. In contrast, things become quite tricky in the Elbow method, as the optimum number of clusters is more difficult to be recognized visually. Since the elbow is identified as the point after which the sum squares start decreasing slowly in a linear fashion (many literatures/sources say this, e.g https://www.geeksforgeeks.org/elbow-method-for-optimal-value-of-k-in-kmeans/), we conclude that the optimal number of clusters for the data is 3 based on elbow method.
+
+Furthermore, we can say that the result of Elbow method represents the data better as the amount of optimal cluster is similar with the amount of species included in the dataset, i.e : setosa, versicolor, virginica (3 levels category).
+
+```{r}
+km=kmeans(df_scaled,centers = 3,nstart = 50)
+fviz_cluster(km,data=df_scaled)
+```
+
+Similar to the previous result, the Kmeans Cluster plot also shows approximately 96% explained variance for both principal components (x-axis and y-axis).
+```{r}
+df=iris
+df=df[complete.cases(df),]
+df$Cluster=factor(km$cluster)
+df$Species=factor(df$Species)
+df
+```
+```{r,fig.width=8,fig.height=3}
+library(patchwork)
+p1=ggplot(df,aes(x=Petal.Length,y=Petal.Width,color=Species))+geom_point(size=2)+labs(title='True Data')
+p2=ggplot(df,aes(x=Petal.Length,y=Petal.Width,color=Cluster))+geom_point(size=2)+labs(title='Clustered by Kmeans with k=3')
+p3=p1+p2
+ggsave('cluster3.jpg',p3,dpi=1000,width=15,height=6)
+print(p3)
+```
+
+From the Petal.Length vs Petal.Width plot, one can see that the model is able to perfectly identify the setosa species among all observations. Unfortunately, when attempting to identify the versicolor and virginica species, the model begins to make 'mistakes'. The probable reason of this error is the difference between versicolor and virginica is not as great as the difference between setosa and others.
+
+Comparison table (Prediction columns shows the Kmeans result):
+```{r}
+table(df$Cluster,df$Species,dnn = c('Prediction',''))
+```
+For the disclaimer, even though the elbow method represents the data better, the conclusion may changes if we are in a such real condition that no information about Species is available. In my opinion, the optimal cluster numbers from Silhouette method, i.e k=2 will be more favorable to be used since the observations are more 'distinctly clustered' than the result of k=3. 
+```{r}
+km2=kmeans(df_scaled,centers = 2,nstart = 50)
+fviz_cluster(km2,data=df_scaled)
+```
+```{r,fig.width=8,fig.height=3}
+df$Cluster2=factor(km2$cluster)
+p1=ggplot(df,aes(x=Petal.Length,y=Petal.Width,color=Species))+geom_point(size=2)+labs(title='True Data')
+p2=ggplot(df,aes(x=Petal.Length,y=Petal.Width,color=Cluster2))+geom_point(size=2)+labs(title='Clustered by Kmeans with k=2')
+p1+p2
+```
+
+The model straighforwardly clusters all observations into 2 cluster, setosa and other species (versicolor and virginica), as the great difference between them indeed exists.
+
+
+
+
+
+
+
+
+
+
